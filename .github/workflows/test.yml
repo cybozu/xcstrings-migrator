@@ -2,6 +2,12 @@ name: Test
 
 on:
   workflow_dispatch:
+  push:
+    paths-ignore:
+      - README.md
+      - .gitignore
+    branches-ignore:
+      - "main"
 
 jobs:
   run-test:
@@ -22,12 +28,13 @@ jobs:
         run: |
           xcodebuild test \
             -scheme xcstrings-migrator-Package \
-            -destination "platform=macOS" \
-            -resultBundlePath TestsResult |\
+            -destination "platform=macOS,arch=arm64" \
+            -resultBundlePath TestResults/result_bundle | \
             xcpretty -c && exit ${PIPESTATUS[0]}
 
       - name: Archive test results
         if: success() || failure()
         uses: kishikawakatsumi/xcresulttool@v1.7.1
         with:
-          path: TestsResult.xcresult
+          path: TestResults/result_bundle.xcresult
+          show-passed-tests: false
