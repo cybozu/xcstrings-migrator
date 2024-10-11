@@ -1,6 +1,7 @@
 # xcstrings-migrator
 
 Convert legacy strings files to xcstrings (String Catalog).
+This tool can also revert xcstrings to legacy strings files.
 
 ## Help
 
@@ -22,8 +23,23 @@ SUBCOMMANDS:
 
 ## Usage
 
+**Installation**
+
 ```sh
-git clone https://github.com/Kyome22/xcstrings-migrator.git
+git clone https://github.com/cybozu/xcstrings-migrator.git
 cd xcstrings-migrator
-swift run xcstrings-migrator -output-directory ~/result -path ~/original/en.lproj -path ~/original/ja.lproj
+swift build -c release
+$ cp .build/release/xcstrings-migrator /usr/local/bin/xcstrings-migrator
+```
+
+**Migrate**
+
+```sh
+xcstrings-migrator -output-directory ~/result -path ~/original/en.lproj -path ~/original/ja.lproj
+```
+
+**Revert**
+
+```sh
+xcstrings-migrator revert -output-directory ~/result -path ~/Localizable.xcstrings
 ```
