@@ -26,8 +26,8 @@ jobs:
             -resultBundlePath TestsResult |\
             xcpretty -c && exit ${PIPESTATUS[0]}
 
-      - name: Archive unit test results
+      - name: Archive test results
         if: success() || failure()
-        uses: kishikawakatsumi/xcresulttool@v1
+        uses: kishikawakatsumi/xcresulttool@v1.7.1
         with:
           path: TestsResult.xcresult
