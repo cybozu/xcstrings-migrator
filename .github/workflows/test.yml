@@ -1,0 +1,33 @@
+name: Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-test:
+    name: Run Test
+    runs-on: macos-14
+    timeout-minutes: 15
+    env:
+      DEVELOPER_DIR: "/Applications/Xcode_15.4.app/Contents/Developer"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Run Test
+        run: |
+          xcodebuild test \
+            -scheme xcstrings-migrator-Package \
+            -destination "platform=macOS" \
+            -resultBundlePath TestsResult |\
+            xcpretty -c && exit ${PIPESTATUS[0]}
+
+      - name: Archive unit test results
+        if: success() || failure()
+        uses: kishikawakatsumi/xcresulttool@v1
+        with:
+          path: TestsResult.xcresult
