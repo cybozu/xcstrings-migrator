@@ -8,3 +8,5 @@ xcuserdata/
 /*.xcstrings
 /*.lproj
 /*.strings
+TestsResult
+TestsResult.xcresult
