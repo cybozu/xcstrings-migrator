@@ -1,12 +1,10 @@
 .DS_Store
 .build/
 .swiftpm/
-Package.resolved
-/Packages
-/*.xcodeproj
 xcuserdata/
+Package.resolved
+/*.xcodeproj
 /*.xcstrings
 /*.lproj
 /*.strings
-TestsResult
-TestsResult.xcresult
+TestResults
