@@ -1,0 +1,9 @@
+/* 
+  Localizable.strings
+  Created by ky0me22 on 2024/10/05.
+*/
+
+"\"Hello %@\"" = "\"Hello %@\"";
+"Count = %lld" = "Count = %lld";
+"key" = "value";
+"path" = "/";
