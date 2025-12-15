@@ -61,10 +61,10 @@ final class XMMigratorTests: XCTestCase {
                     tableName: "Localizable",
                     language: "full",
                     values: [
-                        "\"Hello %@\"": "\"Hello %@\"",
-                        "Count = %lld": "Count = %lld",
-                        "key": "value",
-                        "path": "/",
+                        "\"Hello %@\"": .simple("\"Hello %@\""),
+                        "Count = %lld": .simple("Count = %lld"),
+                        "key": .simple("value"),
+                        "path": .simple("/"),
                     ]
                 )
             ]
@@ -104,20 +104,20 @@ final class XMMigratorTests: XCTestCase {
                     tableName: "Module1",
                     language: "en",
                     values: [
-                        "\"Hello %@\"": "\"Hello %@\"",
-                        "Count = %lld": "Count = %lld",
-                        "language": "English",
-                        "path": "/",
+                        "\"Hello %@\"": .simple("\"Hello %@\""),
+                        "Count = %lld": .simple("Count = %lld"),
+                        "language": .simple("English"),
+                        "path": .simple("/"),
                     ]
                 ),
                 StringsData(
                     tableName: "Module1", 
                     language: "ja", 
                     values: [
-                        "\"Hello %@\"": "「こんにちは%@」",
-                        "Count = %lld": "カウント＝%lld",
-                        "language": "日本語",
-                        "path": "/",
+                        "\"Hello %@\"": .simple("「こんにちは%@」"),
+                        "Count = %lld": .simple("カウント＝%lld"),
+                        "language": .simple("日本語"),
+                        "path": .simple("/"),
                     ]
                 ),
             ]

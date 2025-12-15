@@ -76,28 +76,29 @@ final class XMReverterTests: XCTestCase {
                 ],
                 version: "1.0"
             )
-            let actual = sut.convertToStringsData(from: input)
+            let (actualStrings, actualStringsDict) = sut.convertToStringsData(from: input)
             let expect = [
                 StringsData(
                     tableName: "Localizable",
                     language: "en",
                     values: [
-                        "key1": "en_value_1",
-                        "key2": "en_value_2",
-                        "key3": "en_value_3",
+                        "key1": .simple("en_value_1"),
+                        "key2": .simple("en_value_2"),
+                        "key3": .simple("en_value_3"),
                     ]
                 ),
                 StringsData(
                     tableName: "Localizable",
                     language: "ja",
                     values: [
-                        "key1": "ja_value_1",
-                        "key2": "ja_value_2",
-                        "key3": "ja_value_3",
+                        "key1": .simple("ja_value_1"),
+                        "key2": .simple("ja_value_2"),
+                        "key3": .simple("ja_value_3"),
                     ]
                 ),
             ]
-            XCTAssertEqual(actual.sorted(by: { $0.language < $1.language }), expect)
+            XCTAssertEqual(actualStrings.sorted(by: { $0.language < $1.language }), expect)
+            XCTAssertTrue(actualStringsDict.isEmpty)
         }
     }
 
@@ -118,10 +119,10 @@ final class XMReverterTests: XCTestCase {
                 tableName: "Localizable",
                 language: "test",
                 values: [
-                    "\"Hello %@\"": "\"Hello %@\"",
-                    "Count = %lld": "Count = %lld",
-                    "key": "value",
-                    "path": "/",
+                    "\"Hello %@\"": .simple("\"Hello %@\""),
+                    "Count = %lld": .simple("Count = %lld"),
+                    "key": .simple("value"),
+                    "path": .simple("/"),
                 ]
             )
             try sut.exportStringsFile(input)
