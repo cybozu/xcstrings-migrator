@@ -3,6 +3,7 @@ import Testing
 
 @testable import XCStringsMigrator
 
+@Suite(.serialized)
 struct XMMigratorTests {
     @Test("If URL is invalid, nil will be returned.")
     func extractKeyValue_negative() throws {

@@ -3,6 +3,7 @@ import Testing
 
 @testable import XCStringsMigrator
 
+@Suite(.serialized)
 struct XMReverterTests {
     @Test("If path extension is not xcstrings, error is thrown.")
     func extractXCStrings_negative_1() throws {
@@ -136,7 +137,6 @@ struct XMReverterTests {
             #expect(url.path() == "output/test.lproj/Localizable.strings")
             writeStrings.append(text)
         }
-
         let input = StringsData(
             tableName: "Localizable",
             language: "test",
