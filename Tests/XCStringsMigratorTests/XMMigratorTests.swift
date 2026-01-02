@@ -6,18 +6,18 @@ import Testing
 @Suite(.serialized)
 struct XMMigratorTests {
     @Test("If URL is invalid, nil will be returned.")
-    func extractKeyValue_negative() throws {
+    func extractSingularValue_negative() throws {
         let sut = XMMigrator(sourceLanguage: "", paths: [], outputPath: "", verbose: false)
         let url = try #require(Bundle.module.resourceURL).appending(path: "not-exist.strings")
-        let actual = sut.extractKeyValue(from: url)
+        let actual = sut.extractSingularValue(from: url)
         #expect(actual == nil)
     }
 
     @Test("If strings file is valid, dictionary will be returned.")
-    func extractKeyValue_positive() throws {
+    func extractSingularValue_positive() throws {
         let sut = XMMigrator(sourceLanguage: "", paths: [], outputPath: "", verbose: false)
         let url = try #require(Bundle.module.url(forResource: "Localizable", withExtension: "strings", subdirectory: "Migrator"))
-        let actual = sut.extractKeyValue(from: url)
+        let actual = sut.extractSingularValue(from: url)
         let expect = [
             "\"Hello %@\"": "\"Hello %@\"",
             "Count = %lld": "Count = %lld",
@@ -35,18 +35,18 @@ struct XMMigratorTests {
     }
 
     @Test("If URL is invalid, nil will be returned.")
-    func extractStringsDictValue_negative() throws {
+    func extractPluralValue_negative() throws {
         let sut = XMMigrator(sourceLanguage: "", paths: [], outputPath: "", verbose: false)
         let url = try #require(Bundle.module.resourceURL).appending(path: "not-exist.stringsdict")
-        let actual = sut.extractStringsDictValue(from: url)
+        let actual = sut.extractPluralValue(from: url)
         #expect(actual == nil)
     }
 
     @Test("If stringsdict file is valid, dictionary will be returned.")
-    func extractStringsDictValue_positive() throws {
+    func extractPluralValue_positive() throws {
         let sut = XMMigrator(sourceLanguage: "", paths: [], outputPath: "", verbose: false)
         let url = try #require(Bundle.module.url(forResource: "Localizable", withExtension: "stringsdict", subdirectory: "Migrator"))
-        let actual = sut.extractStringsDictValue(from: url)
+        let actual = sut.extractPluralValue(from: url)
         let expect: [String: [String: String]] = [
             "%lld item(s)": [
                 "zero": "%lld item",
@@ -101,22 +101,22 @@ struct XMMigratorTests {
             StringsData(
                 tableName: "Localizable",
                 language: "full",
-                values: [
-                    "\"Hello %@\"": .simple("\"Hello %@\""),
-                    "Count = %lld": .simple("Count = %lld"),
-                    "key": .simple("value"),
-                    "path": .simple("/"),
+                items: [
+                    .init(key: "\"Hello %@\"", value: .singular("\"Hello %@\"")),
+                    .init(key: "Count = %lld", value: .singular("Count = %lld")),
+                    .init(key: "key", value: .singular("value")),
+                    .init(key: "path", value: .singular("/")),
                 ]
             ),
             StringsData(
                 tableName: "Localizable",
                 language: "full",
-                values: [
-                    "%lld item(s)": .plural([
-                        "other": "%lld items",
-                        "one": "%lld item",
-                        "zero": "%lld item",
-                    ]),
+                items: [
+                    .init(key: "%lld item(s)", value: .plural([
+                        .init(rule: .one, value: "%lld item"),
+                        .init(rule: .other, value: "%lld items"),
+                        .init(rule: .zero, value: "%lld item"),
+                    ])),
                 ]
             ),
         ]
@@ -126,21 +126,21 @@ struct XMMigratorTests {
     @Test("StringsData array is classified by table name.")
     func classifyStringsData_positive() throws {
         let sut = XMMigrator(sourceLanguage: "", paths: [], outputPath: "", verbose: false)
-        let input: [StringsData] = [
-            StringsData(tableName: "Module1", language: "en", values: [:]),
-            StringsData(tableName: "Module1", language: "ja", values: [:]),
-            StringsData(tableName: "Module2", language: "en", values: [:]),
-            StringsData(tableName: "Module2", language: "ja", values: [:]),
+        let input = [
+            StringsData(tableName: "Module1", language: "en", items: []),
+            StringsData(tableName: "Module1", language: "ja", items: []),
+            StringsData(tableName: "Module2", language: "en", items: []),
+            StringsData(tableName: "Module2", language: "ja", items: []),
         ]
         let actual = sut.classifyStringsData(with: input)
         let expect = [
             "Module1": [
-                StringsData(tableName: "Module1", language: "en", values: [:]),
-                StringsData(tableName: "Module1", language: "ja", values: [:]),
+                StringsData(tableName: "Module1", language: "en", items: []),
+                StringsData(tableName: "Module1", language: "ja", items: []),
             ],
             "Module2": [
-                StringsData(tableName: "Module2", language: "en", values: [:]),
-                StringsData(tableName: "Module2", language: "ja", values: [:]),
+                StringsData(tableName: "Module2", language: "en", items: []),
+                StringsData(tableName: "Module2", language: "ja", items: []),
             ]
         ]
         #expect(actual == expect)
@@ -149,34 +149,34 @@ struct XMMigratorTests {
     @Test("StringsData array is converted to XCStrings.")
     func convertToXCStrings_positive() throws {
         let sut = XMMigrator(sourceLanguage: "test", paths: [], outputPath: "", verbose: false)
-        let input: [StringsData] = [
+        let input = [
             StringsData(
                 tableName: "Module1",
                 language: "en",
-                values: [
-                    "\"Hello %@\"": .simple("\"Hello %@\""),
-                    "Count = %lld": .simple("Count = %lld"),
-                    "language": .simple("English"),
-                    "path": .simple("/"),
-                    "%lld item(s)": .plural([
-                        "one": "%lld item",
-                        "zero": "%lld item",
-                        "other": "%lld items",
-                    ]),
+                items: [
+                    .init(key: "\"Hello %@\"", value: .singular("\"Hello %@\"")),
+                    .init(key: "Count = %lld", value: .singular("Count = %lld")),
+                    .init(key: "language", value: .singular("English")),
+                    .init(key: "path", value: .singular("/")),
+                    .init(key: "%lld item(s)", value: .plural([
+                        .init(rule: .one, value: "%lld item"),
+                        .init(rule: .other, value: "%lld items"),
+                        .init(rule: .zero, value: "%lld item"),
+                    ])),
                 ]
             ),
             StringsData(
                 tableName: "Module1",
                 language: "ja",
-                values: [
-                    "\"Hello %@\"": .simple("「こんにちは%@」"),
-                    "Count = %lld": .simple("カウント＝%lld"),
-                    "language": .simple("日本語"),
-                    "path": .simple("/"),
-                    "%lld item(s)": .plural([
-                        "zero": "%lld個",
-                        "other": "%lld個",
-                    ]),
+                items: [
+                    .init(key: "\"Hello %@\"", value: .singular("「こんにちは%@」")),
+                    .init(key: "Count = %lld", value: .singular("カウント＝%lld")),
+                    .init(key: "language", value: .singular("日本語")),
+                    .init(key: "path", value: .singular("/")),
+                    .init(key: "%lld item(s)", value: .plural([
+                        .init(rule: .other, value: "%lld個"),
+                        .init(rule: .zero, value: "%lld個"),
+                    ])),
                 ]
             ),
         ]
@@ -184,31 +184,31 @@ struct XMMigratorTests {
         let expect = XCStrings(
             sourceLanguage: "test",
             strings: [
-                "\"Hello %@\"": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "\"Hello %@\"")),
-                    "ja": Localization(stringUnit: .init(value: "「こんにちは%@」")),
+                "\"Hello %@\"": .init(localizations: [
+                    "en": .stringUnit(.init(value: "\"Hello %@\"")),
+                    "ja": .stringUnit(.init(value: "「こんにちは%@」")),
                 ]),
-                "Count = %lld": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "Count = %lld")),
-                    "ja": Localization(stringUnit: .init(value: "カウント＝%lld")),
+                "Count = %lld": .init(localizations: [
+                    "en": .stringUnit(.init(value: "Count = %lld")),
+                    "ja": .stringUnit(.init(value: "カウント＝%lld")),
                 ]),
-                "language": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "English")),
-                    "ja": Localization(stringUnit: .init(value: "日本語")),
+                "language": .init(localizations: [
+                    "en": .stringUnit(.init(value: "English")),
+                    "ja": .stringUnit(.init(value: "日本語")),
                 ]),
-                "path": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "/")),
-                    "ja": Localization(stringUnit: .init(value: "/")),
+                "path": XCStrings.Strings(localizations: [
+                    "en": .stringUnit(.init(value: "/")),
+                    "ja": .stringUnit(.init(value: "/")),
                 ]),
-                "%lld item(s)": Strings(localizations: [
-                    "en": Localization(variations: .init(plural: [
-                        "one":  PluralVariation(stringUnit: .init(value: "%lld item")),
-                        "zero": PluralVariation(stringUnit: .init(value: "%lld item")),
-                        "other": PluralVariation(stringUnit: .init(value: "%lld items")),
+                "%lld item(s)": .init(localizations: [
+                    "en": .variations(.init(plural: [
+                        "one": .init(stringUnit: .init(value: "%lld item")),
+                        "zero": .init(stringUnit: .init(value: "%lld item")),
+                        "other": .init(stringUnit: .init(value: "%lld items")),
                     ])),
-                    "ja": Localization(variations: .init(plural: [
-                        "zero": PluralVariation(stringUnit: .init(value: "%lld個")),
-                        "other": PluralVariation(stringUnit: .init(value: "%lld個")),
+                    "ja": .variations(.init(plural: [
+                        "zero": .init(stringUnit: .init(value: "%lld個")),
+                        "other": .init(stringUnit: .init(value: "%lld個")),
                     ])),
                 ]),
             ],
@@ -248,31 +248,31 @@ struct XMMigratorTests {
         let input = XCStrings(
             sourceLanguage: "test",
             strings: [
-                "\"Hello %@\"": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "\"Hello %@\"")),
-                    "ja": Localization(stringUnit: StringUnit(value: "「こんにちは%@」")),
+                "\"Hello %@\"": .init(localizations: [
+                    "en": .stringUnit(.init(value: "\"Hello %@\"")),
+                    "ja": .stringUnit(.init(value: "「こんにちは%@」")),
                 ]),
-                "Count = %lld": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "Count = %lld")),
-                    "ja": Localization(stringUnit: StringUnit(value: "カウント＝%lld")),
+                "Count = %lld": .init(localizations: [
+                    "en": .stringUnit(.init(value: "Count = %lld")),
+                    "ja": .stringUnit(.init(value: "カウント＝%lld")),
                 ]),
-                "language": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "English")),
-                    "ja": Localization(stringUnit: StringUnit(value: "日本語")),
+                "language": .init(localizations: [
+                    "en": .stringUnit(.init(value: "English")),
+                    "ja": .stringUnit(.init(value: "日本語")),
                 ]),
-                "path": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "/")),
-                    "ja": Localization(stringUnit: StringUnit(value: "/")),
+                "path": .init(localizations: [
+                    "en": .stringUnit(.init(value: "/")),
+                    "ja": .stringUnit(.init(value: "/")),
                 ]),
-                "%lld item(s)": Strings(localizations: [
-                    "en": Localization(variations: .init(plural: [
-                        "one":  PluralVariation(stringUnit: .init(value: "%lld item")),
-                        "zero": PluralVariation(stringUnit: .init(value: "%lld item")),
-                        "other": PluralVariation(stringUnit: .init(value: "%lld items")),
+                "%lld item(s)": .init(localizations: [
+                    "en": .variations(.init(plural: [
+                        "one": .init(stringUnit: .init(value: "%lld item")),
+                        "zero": .init(stringUnit: .init(value: "%lld item")),
+                        "other": .init(stringUnit: .init(value: "%lld items")),
                     ])),
-                    "ja": Localization(variations: .init(plural: [
-                        "zero": PluralVariation(stringUnit: .init(value: "%lld個")),
-                        "other": PluralVariation(stringUnit: .init(value: "%lld個")),
+                    "ja": .variations(.init(plural: [
+                        "zero": .init(stringUnit: .init(value: "%lld個")),
+                        "other": .init(stringUnit: .init(value: "%lld個")),
                     ])),
                 ]),
             ],
@@ -299,31 +299,31 @@ struct XMMigratorTests {
         let input = XCStrings(
             sourceLanguage: "test",
             strings: [
-                "\"Hello %@\"": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "\"Hello %@\"")),
-                    "ja": Localization(stringUnit: StringUnit(value: "「こんにちは%@」")),
+                "\"Hello %@\"": .init(localizations: [
+                    "en": .stringUnit(.init(value: "\"Hello %@\"")),
+                    "ja": .stringUnit(.init(value: "「こんにちは%@」")),
                 ]),
-                "Count = %lld": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "Count = %lld")),
-                    "ja": Localization(stringUnit: StringUnit(value: "カウント＝%lld")),
+                "Count = %lld": .init(localizations: [
+                    "en": .stringUnit(.init(value: "Count = %lld")),
+                    "ja": .stringUnit(.init(value: "カウント＝%lld")),
                 ]),
-                "language": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "English")),
-                    "ja": Localization(stringUnit: StringUnit(value: "日本語")),
+                "language": .init(localizations: [
+                    "en": .stringUnit(.init(value: "English")),
+                    "ja": .stringUnit(.init(value: "日本語")),
                 ]),
-                "path": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "/")),
-                    "ja": Localization(stringUnit: StringUnit(value: "/")),
+                "path": .init(localizations: [
+                    "en": .stringUnit(.init(value: "/")),
+                    "ja": .stringUnit(.init(value: "/")),
                 ]),
-                "%lld item(s)": Strings(localizations: [
-                    "en": Localization(variations: .init(plural: [
-                        "one":  PluralVariation(stringUnit: .init(value: "%lld item")),
-                        "zero": PluralVariation(stringUnit: .init(value: "%lld item")),
-                        "other": PluralVariation(stringUnit: .init(value: "%lld items")),
+                "%lld item(s)": .init(localizations: [
+                    "en": .variations(.init(plural: [
+                        "one": .init(stringUnit: .init(value: "%lld item")),
+                        "zero": .init(stringUnit: .init(value: "%lld item")),
+                        "other": .init(stringUnit: .init(value: "%lld items")),
                     ])),
-                    "ja": Localization(variations: .init(plural: [
-                        "zero": PluralVariation(stringUnit: .init(value: "%lld個")),
-                        "other": PluralVariation(stringUnit: .init(value: "%lld個")),
+                    "ja": .variations(.init(plural: [
+                        "zero": .init(stringUnit: .init(value: "%lld個")),
+                        "other": .init(stringUnit: .init(value: "%lld個")),
                     ])),
                 ]),
             ],
