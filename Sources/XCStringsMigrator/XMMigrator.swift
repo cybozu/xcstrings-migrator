@@ -194,7 +194,6 @@ public struct XMMigrator {
             try writeData(data, outputURL)
             standardOutput("Succeeded to export xcstrings files.")
         } catch {
-            Swift.print("error:", error)
             throw XMError.failedToExportXCStringsFile
         }
     }
