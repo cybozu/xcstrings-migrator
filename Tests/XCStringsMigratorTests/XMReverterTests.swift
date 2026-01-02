@@ -3,6 +3,7 @@ import Testing
 
 @testable import XCStringsMigrator
 
+@Suite(.serialized)
 struct XMReverterTests {
     @Test("If path extension is not xcstrings, error is thrown.")
     func extractXCStrings_negative_1() throws {
