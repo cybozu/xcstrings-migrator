@@ -136,7 +136,6 @@ struct XMReverterTests {
             #expect(url.path() == "output/test.lproj/Localizable.strings")
             writeStrings.append(text)
         }
-
         let input = StringsData(
             tableName: "Localizable",
             language: "test",
