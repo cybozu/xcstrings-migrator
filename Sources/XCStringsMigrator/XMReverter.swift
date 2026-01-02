@@ -5,7 +5,7 @@ public struct XMReverter {
     private var outputPath: String
     var standardOutput: (Any...) -> Void
     var createDirectory: (URL) throws -> Void
-    var writeString: (String, URL) throws -> Void
+    var writeData: (Data, URL) throws -> Void
 
     public init(path: String, outputPath: String) {
         self.path = path
@@ -16,8 +16,8 @@ public struct XMReverter {
         self.createDirectory = {
             try FileManager.default.createDirectory(at: $0, withIntermediateDirectories: true)
         }
-        self.writeString = {
-            try $0.write(to: $1, atomically: false, encoding: .utf8)
+        self.writeData = {
+            try $0.write(to: $1)
         }
     }
 
@@ -94,14 +94,15 @@ public struct XMReverter {
             let outputFileURL = outputFolderURL
                 .appending(path: stringsData.tableName)
                 .appendingPathExtension("strings")
-            let text = stringsData.values
+            let data = stringsData.values
                 .sorted(by: { $0.key < $1.key })
                 .compactMap { key, value -> String? in
                     guard case .simple(let stringValue) = value else { return nil }
                     return "\(key.debugDescription) = \(stringValue.debugDescription);"
                 }
                 .joined(separator: "\n")
-            try writeString(text, outputFileURL)
+                .data(using: .utf8)!
+            try writeData(data, outputFileURL)
             standardOutput("Succeeded to export strings file.")
         } catch {
             throw XMError.failedToExportStringsFile
@@ -132,7 +133,7 @@ public struct XMReverter {
                     "NSStringFormatSpecTypeKey": "NSStringPluralRuleType",
                     "NSStringFormatValueTypeKey": "li"
                 ]
-                
+
                 // Add plural rules
                 for (pluralKey, pluralValue) in pluralRules {
                     variableDict[pluralKey] = pluralValue
@@ -146,13 +147,12 @@ public struct XMReverter {
             }
             
             // Convert to XML plist
-            let plistData = try PropertyListSerialization.data(
+            let data = try PropertyListSerialization.data(
                 fromPropertyList: plistDict,
                 format: .xml,
                 options: 0
             )
-            
-            try plistData.write(to: outputFileURL)
+            try writeData(data, outputFileURL)
             standardOutput("Succeeded to export stringsdict file.")
         } catch {
             throw XMError.failedToExportStringsFile
