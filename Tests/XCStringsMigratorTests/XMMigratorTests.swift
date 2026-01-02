@@ -27,6 +27,36 @@ struct XMMigratorTests {
         #expect(actual == expect)
     }
 
+    @Test("Extract variable name from formatKey (e.g., \"%#@format@\" -> \"format\")")
+    func extractVariableName_positive() throws {
+        let sut = XMMigrator(sourceLanguage: "", paths: [], outputPath: "", verbose: false)
+        let actual = sut.extractVariableName(from: "%#@format@")
+        #expect(actual == "format")
+    }
+
+    @Test("If URL is invalid, nil will be returned.")
+    func extractStringsDictValue_negative() throws {
+        let sut = XMMigrator(sourceLanguage: "", paths: [], outputPath: "", verbose: false)
+        let url = try #require(Bundle.module.resourceURL).appending(path: "not-exist.stringsdict")
+        let actual = sut.extractStringsDictValue(from: url)
+        #expect(actual == nil)
+    }
+
+    @Test("If stringsdict file is valid, dictionary will be returned.")
+    func extractStringsDictValue_positive() throws {
+        let sut = XMMigrator(sourceLanguage: "", paths: [], outputPath: "", verbose: false)
+        let url = try #require(Bundle.module.url(forResource: "Localizable", withExtension: "stringsdict", subdirectory: "Migrator"))
+        let actual = sut.extractStringsDictValue(from: url)
+        let expect: [String: [String: String]] = [
+            "%lld item(s)": [
+                "zero": "%lld item",
+                "one": "%lld item",
+                "other": "%lld items"
+            ]
+        ]
+        #expect(actual == expect)
+    }
+
     @Test("If paths is empty, error is thrown.")
     func extractStringsData_negative_1() throws {
         let sut = XMMigrator(sourceLanguage: "", paths: [], outputPath: "", verbose: false)
@@ -77,7 +107,18 @@ struct XMMigratorTests {
                     "key": .simple("value"),
                     "path": .simple("/"),
                 ]
-            )
+            ),
+            StringsData(
+                tableName: "Localizable",
+                language: "full",
+                values: [
+                    "%lld item(s)": .plural([
+                        "other": "%lld items",
+                        "one": "%lld item",
+                        "zero": "%lld item",
+                    ]),
+                ]
+            ),
         ]
         #expect(actual == expect)
     }
@@ -117,6 +158,11 @@ struct XMMigratorTests {
                     "Count = %lld": .simple("Count = %lld"),
                     "language": .simple("English"),
                     "path": .simple("/"),
+                    "%lld item(s)": .plural([
+                        "one": "%lld item",
+                        "zero": "%lld item",
+                        "other": "%lld items",
+                    ]),
                 ]
             ),
             StringsData(
@@ -127,6 +173,10 @@ struct XMMigratorTests {
                     "Count = %lld": .simple("カウント＝%lld"),
                     "language": .simple("日本語"),
                     "path": .simple("/"),
+                    "%lld item(s)": .plural([
+                        "zero": "%lld個",
+                        "other": "%lld個",
+                    ]),
                 ]
             ),
         ]
@@ -135,20 +185,31 @@ struct XMMigratorTests {
             sourceLanguage: "test",
             strings: [
                 "\"Hello %@\"": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "\"Hello %@\"")),
-                    "ja": Localization(stringUnit: StringUnit(value: "「こんにちは%@」")),
+                    "en": Localization(stringUnit: .init(value: "\"Hello %@\"")),
+                    "ja": Localization(stringUnit: .init(value: "「こんにちは%@」")),
                 ]),
                 "Count = %lld": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "Count = %lld")),
-                    "ja": Localization(stringUnit: StringUnit(value: "カウント＝%lld")),
+                    "en": Localization(stringUnit: .init(value: "Count = %lld")),
+                    "ja": Localization(stringUnit: .init(value: "カウント＝%lld")),
                 ]),
                 "language": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "English")),
-                    "ja": Localization(stringUnit: StringUnit(value: "日本語")),
+                    "en": Localization(stringUnit: .init(value: "English")),
+                    "ja": Localization(stringUnit: .init(value: "日本語")),
                 ]),
                 "path": Strings(localizations: [
-                    "en": Localization(stringUnit: StringUnit(value: "/")),
-                    "ja": Localization(stringUnit: StringUnit(value: "/")),
+                    "en": Localization(stringUnit: .init(value: "/")),
+                    "ja": Localization(stringUnit: .init(value: "/")),
+                ]),
+                "%lld item(s)": Strings(localizations: [
+                    "en": Localization(variations: .init(plural: [
+                        "one":  PluralVariation(stringUnit: .init(value: "%lld item")),
+                        "zero": PluralVariation(stringUnit: .init(value: "%lld item")),
+                        "other": PluralVariation(stringUnit: .init(value: "%lld items")),
+                    ])),
+                    "ja": Localization(variations: .init(plural: [
+                        "zero": PluralVariation(stringUnit: .init(value: "%lld個")),
+                        "other": PluralVariation(stringUnit: .init(value: "%lld個")),
+                    ])),
                 ]),
             ],
             version: "1.0"
@@ -179,7 +240,7 @@ struct XMMigratorTests {
         sut.standardOutput = { items in
             standardOutputs.append(contentsOf: items.map({ "\($0)" }))
         }
-        var writeDataCount: Int = 0
+        var writeDataCount = Int.zero
         sut.writeData = { _, url in
             #expect(url.path() == "output/Localizable.xcstrings")
             writeDataCount += 1
@@ -202,6 +263,17 @@ struct XMMigratorTests {
                 "path": Strings(localizations: [
                     "en": Localization(stringUnit: StringUnit(value: "/")),
                     "ja": Localization(stringUnit: StringUnit(value: "/")),
+                ]),
+                "%lld item(s)": Strings(localizations: [
+                    "en": Localization(variations: .init(plural: [
+                        "one":  PluralVariation(stringUnit: .init(value: "%lld item")),
+                        "zero": PluralVariation(stringUnit: .init(value: "%lld item")),
+                        "other": PluralVariation(stringUnit: .init(value: "%lld items")),
+                    ])),
+                    "ja": Localization(variations: .init(plural: [
+                        "zero": PluralVariation(stringUnit: .init(value: "%lld個")),
+                        "other": PluralVariation(stringUnit: .init(value: "%lld個")),
+                    ])),
                 ]),
             ],
             version: "1.0"
@@ -219,7 +291,7 @@ struct XMMigratorTests {
         sut.standardOutput = { items in
             standardOutputs.append(contentsOf: items.map({ "\($0)" }))
         }
-        var writeDataCount: Int = 0
+        var writeDataCount = Int.zero
         sut.writeData = { _, url in
             #expect(url.path() == "output/Localizable.xcstrings")
             writeDataCount += 1
@@ -242,6 +314,17 @@ struct XMMigratorTests {
                 "path": Strings(localizations: [
                     "en": Localization(stringUnit: StringUnit(value: "/")),
                     "ja": Localization(stringUnit: StringUnit(value: "/")),
+                ]),
+                "%lld item(s)": Strings(localizations: [
+                    "en": Localization(variations: .init(plural: [
+                        "one":  PluralVariation(stringUnit: .init(value: "%lld item")),
+                        "zero": PluralVariation(stringUnit: .init(value: "%lld item")),
+                        "other": PluralVariation(stringUnit: .init(value: "%lld items")),
+                    ])),
+                    "ja": Localization(variations: .init(plural: [
+                        "zero": PluralVariation(stringUnit: .init(value: "%lld個")),
+                        "other": PluralVariation(stringUnit: .init(value: "%lld個")),
+                    ])),
                 ]),
             ],
             version: "1.0"
@@ -263,6 +346,52 @@ struct XMMigratorTests {
                       "stringUnit" : {
                         "state" : "translated",
                         "value" : "「こんにちは%@」"
+                      }
+                    }
+                  }
+                },
+                "%lld item(s)" : {
+                  "localizations" : {
+                    "en" : {
+                      "variations" : {
+                        "plural" : {
+                          "one" : {
+                            "stringUnit" : {
+                              "state" : "translated",
+                              "value" : "%lld item"
+                            }
+                          },
+                          "other" : {
+                            "stringUnit" : {
+                              "state" : "translated",
+                              "value" : "%lld items"
+                            }
+                          },
+                          "zero" : {
+                            "stringUnit" : {
+                              "state" : "translated",
+                              "value" : "%lld item"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "ja" : {
+                      "variations" : {
+                        "plural" : {
+                          "other" : {
+                            "stringUnit" : {
+                              "state" : "translated",
+                              "value" : "%lld個"
+                            }
+                          },
+                          "zero" : {
+                            "stringUnit" : {
+                              "state" : "translated",
+                              "value" : "%lld個"
+                            }
+                          }
+                        }
                       }
                     }
                   }
