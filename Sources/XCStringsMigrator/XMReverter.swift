@@ -56,6 +56,7 @@ public struct XMReverter {
                 case let .stringUnit(stringUnit):
                     if let index = stringsArray.firstIndex(where: { $0.language == language }) {
                         stringsArray[index].items.append(.init(key: stringKey, value: .singular(stringUnit.value)))
+                        stringsArray[index].items.sort { $0.key < $1.key }
                     } else {
                         stringsArray.append(StringsData(
                             tableName: "Localizable",
@@ -72,6 +73,7 @@ public struct XMReverter {
                         .sorted { $0.rule.rawValue < $1.rule.rawValue }
                     if let index = stringsDictArray.firstIndex(where: { $0.language == language }) {
                         stringsDictArray[index].items.append(.init(key: stringKey, value: .plural(plurals)))
+                        stringsDictArray[index].items.sort { $0.key < $1.key }
                     } else {
                         stringsDictArray.append(StringsData(
                             tableName: "Localizable",
@@ -82,6 +84,8 @@ public struct XMReverter {
                 }
             }
         }
+        stringsArray.sort { $0.language < $1.language }
+        stringsDictArray.sort { $0.language < $1.language }
         return (stringsArray, stringsDictArray)
     }
 

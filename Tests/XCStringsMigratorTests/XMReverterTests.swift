@@ -143,8 +143,8 @@ struct XMReverterTests {
                 ]
             ),
         ]
-        #expect(actualStrings.sorted(by: { $0.language < $1.language }) == expectStrings)
-        #expect(actualStringsDict.sorted(by: { $0.language < $1.language }) == expectStringsDict)
+        #expect(actualStrings == expectStrings)
+        #expect(actualStringsDict == expectStringsDict)
     }
 
     @Test("If exporting file fails, an error is thrown.")
@@ -202,7 +202,7 @@ struct XMReverterTests {
             throw CocoaError(.fileWriteUnknown)
         }
         let input = StringsData(tableName: "Localizable", language: "test", items: [])
-        #expect(throws: XMError.failedToExportStringsFile) {
+        #expect(throws: XMError.failedToExportStringsDictFile) {
             try sut.exportStringsDictFile(input)
         }
         #expect(standardOutputs.isEmpty)
