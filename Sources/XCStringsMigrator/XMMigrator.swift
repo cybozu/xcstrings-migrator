@@ -45,7 +45,17 @@ public struct XMMigrator {
         }
         return dictionary
     }
-    
+
+    func extractVariableName(from formatKey: String) -> String {
+        let pattern = "%#@([^@]+)@"
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: formatKey, range: NSRange(formatKey.startIndex..., in: formatKey)),
+              let range = Range(match.range(at: 1), in: formatKey) else {
+            return ""
+        }
+        return String(formatKey[range])
+    }
+
     func extractStringsDictValue(from url: URL) -> [String: [String: String]]? {
         guard let data = try? Data(contentsOf: url),
               let plist = try? PropertyListSerialization.propertyList(from: data, format: nil),
@@ -54,43 +64,24 @@ public struct XMMigrator {
         }
         
         return dictionary.compactMapValues { topLevelDict -> [String: String]? in
-            // Extract the format key (e.g., "%#@format@")
             guard let formatKey = topLevelDict["NSStringLocalizedFormatKey"] as? String else {
                 return nil
             }
-            
-            // Extract variable name from formatKey (e.g., "%#@format@" -> "format")
             let variableName = extractVariableName(from: formatKey)
             guard !variableName.isEmpty else { return nil }
-            
-            // Get the variable dictionary
             guard let variableDict = topLevelDict[variableName] as? [String: Any],
                   let specType = variableDict["NSStringFormatSpecTypeKey"] as? String,
                   specType == "NSStringPluralRuleType" else {
                 return nil
             }
-            
-            // Extract plural variations (zero, one, two, few, many, other)
             var pluralRules: [String: String] = [:]
             for key in ["zero", "one", "two", "few", "many", "other"] {
                 if let value = variableDict[key] as? String {
                     pluralRules[key] = value
                 }
             }
-            
             return pluralRules.isEmpty ? nil : pluralRules
         }
-    }
-    
-    private func extractVariableName(from formatKey: String) -> String {
-        // Extract variable from "%#@format@" -> "format"
-        let pattern = "%#@([^@]+)@"
-        guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: formatKey, range: NSRange(formatKey.startIndex..., in: formatKey)),
-              let range = Range(match.range(at: 1), in: formatKey) else {
-            return ""
-        }
-        return String(formatKey[range])
     }
 
     func extractStringsData() throws -> [StringsData] {
