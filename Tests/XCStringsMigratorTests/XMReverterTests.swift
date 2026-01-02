@@ -40,33 +40,33 @@ struct XMReverterTests {
         let expect = XCStrings(
             sourceLanguage: "en",
             strings: [
-                "\"Hello %@\"": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "\"Hello %@\"")),
-                    "ja": Localization(stringUnit: .init(value: "「こんにちは%@」")),
+                "\"Hello %@\"": .init(localizations: [
+                    "en": .stringUnit(.init(value: "\"Hello %@\"")),
+                    "ja": .stringUnit(.init(value: "「こんにちは%@」")),
                 ]),
-                "Count = %lld": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "Count = %lld")),
-                    "ja": Localization(stringUnit: .init(value: "カウント＝%lld")),
+                "Count = %lld": .init(localizations: [
+                    "en": .stringUnit(.init(value: "Count = %lld")),
+                    "ja": .stringUnit(.init(value: "カウント＝%lld")),
                 ]),
-                "language": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "English")),
-                    "ja": Localization(stringUnit: .init(value: "日本語")),
+                "language": .init(localizations: [
+                    "en": .stringUnit(.init(value: "English")),
+                    "ja": .stringUnit(.init(value: "日本語")),
                 ]),
-                "path": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "/")),
-                    "ja": Localization(stringUnit: .init(value: "/")),
+                "path": .init(localizations: [
+                    "en": .stringUnit(.init(value: "/")),
+                    "ja": .stringUnit(.init(value: "/")),
                 ]),
-                "%lld item(s)": Strings(localizations: [
-                    "en": Localization(variations: .init(plural: [
-                        "zero": PluralVariation(stringUnit: .init(value: "%lld item")),
-                        "one": PluralVariation(stringUnit: .init(value: "%lld item")),
-                        "other": PluralVariation(stringUnit: .init(value: "%lld items")),
+                "%lld item(s)": .init(localizations: [
+                    "en": .variations(.init(plural: [
+                        "zero": .init(stringUnit: .init(value: "%lld item")),
+                        "one": .init(stringUnit: .init(value: "%lld item")),
+                        "other": .init(stringUnit: .init(value: "%lld items")),
                     ])),
-                    "ja": Localization(variations: .init(plural: [
-                        "zero": PluralVariation(stringUnit: .init(value: "%lld個")),
-                        "other": PluralVariation(stringUnit: .init(value: "%lld個")),
-                    ]))
-                ])
+                    "ja": .variations(.init(plural: [
+                        "zero": .init(stringUnit: .init(value: "%lld個")),
+                        "other": .init(stringUnit: .init(value: "%lld個")),
+                    ])),
+                ]),
             ],
             version: "1.0"
         )
@@ -79,23 +79,23 @@ struct XMReverterTests {
         let input = XCStrings(
             sourceLanguage: "test",
             strings: [
-                "key1": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "en_value_1")),
-                    "ja": Localization(stringUnit: .init(value: "ja_value_1")),
+                "key1": .init(localizations: [
+                    "en": .stringUnit(.init(value: "en_value_1")),
+                    "ja": .stringUnit(.init(value: "ja_value_1")),
                 ]),
-                "key2": Strings(localizations: [
-                    "en": Localization(stringUnit: .init(value: "en_value_2")),
-                    "ja": Localization(stringUnit: .init(value: "ja_value_2")),
+                "key2": .init(localizations: [
+                    "en": .stringUnit(.init(value: "en_value_2")),
+                    "ja": .stringUnit(.init(value: "ja_value_2")),
                 ]),
-                "key3": Strings(localizations: [
-                    "en": Localization(variations: .init(plural: [
-                        "zero": PluralVariation(stringUnit: .init(value: "en_value_zero")),
-                        "one": PluralVariation(stringUnit: .init(value: "en_value_one")),
-                        "other": PluralVariation(stringUnit: .init(value: "en_value_other")),
+                "key3": .init(localizations: [
+                    "en": .variations(.init(plural: [
+                        "zero": .init(stringUnit: .init(value: "en_value_zero")),
+                        "one": .init(stringUnit: .init(value: "en_value_one")),
+                        "other": .init(stringUnit: .init(value: "en_value_other")),
                     ])),
-                    "ja": Localization(variations: .init(plural: [
-                        "zero": PluralVariation(stringUnit: .init(value: "ja_value_zero")),
-                        "other": PluralVariation(stringUnit: .init(value: "ja_value_other")),
+                    "ja": .variations(.init(plural: [
+                        "zero": .init(stringUnit: .init(value: "ja_value_zero")),
+                        "other": .init(stringUnit: .init(value: "ja_value_other")),
                     ])),
                 ]),
             ],
@@ -106,17 +106,17 @@ struct XMReverterTests {
             StringsData(
                 tableName: "Localizable",
                 language: "en",
-                values: [
-                    "key1": .simple("en_value_1"),
-                    "key2": .simple("en_value_2"),
+                items: [
+                    .init(key: "key1", value: .singular("en_value_1")),
+                    .init(key: "key2", value: .singular("en_value_2")),
                 ]
             ),
             StringsData(
                 tableName: "Localizable",
                 language: "ja",
-                values: [
-                    "key1": .simple("ja_value_1"),
-                    "key2": .simple("ja_value_2"),
+                items: [
+                    .init(key: "key1", value: .singular("ja_value_1")),
+                    .init(key: "key2", value: .singular("ja_value_2")),
                 ]
             ),
         ]
@@ -124,27 +124,27 @@ struct XMReverterTests {
             StringsData(
                 tableName: "Localizable",
                 language: "en",
-                values: [
-                    "key3": .plural([
-                        "zero": "en_value_zero",
-                        "one": "en_value_one",
-                        "other": "en_value_other",
-                    ]),
+                items: [
+                    .init(key: "key3", value: .plural([
+                        .init(rule: .one, value: "en_value_one"),
+                        .init(rule: .other, value: "en_value_other"),
+                        .init(rule: .zero, value: "en_value_zero"),
+                    ])),
                 ]
             ),
             StringsData(
                 tableName: "Localizable",
                 language: "ja",
-                values: [
-                    "key3": .plural([
-                        "zero": "ja_value_zero",
-                        "other": "ja_value_other",
-                    ]),
+                items: [
+                    .init(key: "key3", value: .plural([
+                        .init(rule: .other, value: "ja_value_other"),
+                        .init(rule: .zero, value: "ja_value_zero"),
+                    ])),
                 ]
             ),
         ]
-        #expect(actualStrings.sorted(by: { $0.language < $1.language }) == expectStrings)
-        #expect(actualStringsDict.sorted(by: { $0.language < $1.language }) == expectStringsDict)
+        #expect(actualStrings == expectStrings)
+        #expect(actualStringsDict == expectStringsDict)
     }
 
     @Test("If exporting file fails, an error is thrown.")
@@ -157,7 +157,7 @@ struct XMReverterTests {
         sut.writeData = { _, _ in
             throw CocoaError(.fileWriteUnknown)
         }
-        let input = StringsData(tableName: "Localizable", language: "test", values: [:])
+        let input = StringsData(tableName: "Localizable", language: "test", items: [])
         #expect(throws: XMError.failedToExportStringsFile) {
             try sut.exportStringsFile(input)
         }
@@ -179,11 +179,11 @@ struct XMReverterTests {
         let input = StringsData(
             tableName: "Localizable",
             language: "test",
-            values: [
-                "\"Hello %@\"": .simple("\"Hello %@\""),
-                "Count = %lld": .simple("Count = %lld"),
-                "key": .simple("value"),
-                "path": .simple("/"),
+            items: [
+                .init(key: "\"Hello %@\"", value: .singular("\"Hello %@\"")),
+                .init(key: "Count = %lld", value: .singular("Count = %lld")),
+                .init(key: "key", value: .singular("value")),
+                .init(key: "path", value: .singular("/")),
             ]
         )
         try sut.exportStringsFile(input)
@@ -201,8 +201,8 @@ struct XMReverterTests {
         sut.writeData = { _, _ in
             throw CocoaError(.fileWriteUnknown)
         }
-        let input = StringsData(tableName: "Localizable", language: "test", values: [:])
-        #expect(throws: XMError.failedToExportStringsFile) {
+        let input = StringsData(tableName: "Localizable", language: "test", items: [])
+        #expect(throws: XMError.failedToExportStringsDictFile) {
             try sut.exportStringsDictFile(input)
         }
         #expect(standardOutputs.isEmpty)
@@ -223,12 +223,12 @@ struct XMReverterTests {
         let input = StringsData(
             tableName: "Localizable",
             language: "test",
-            values: [
-                "%lld item(s)": .plural([
-                    "zero": "%lld item",
-                    "one": "%lld item",
-                    "other": "%lld items",
-                ]),
+            items: [
+                .init(key: "%lld item(s)", value: .plural([
+                    .init(rule: .one, value: "%lld item"),
+                    .init(rule: .other, value: "%lld items"),
+                    .init(rule: .zero, value: "%lld item"),
+                ])),
             ]
         )
         try sut.exportStringsDictFile(input)
