@@ -48,40 +48,40 @@ public struct XMReverter {
     }
 
     func convertToStringsData(from xcstrings: XCStrings) -> (strings: [StringsData], stringsdict: [StringsData]) {
-        var stringsArray: [StringsData] = []
-        var stringsDictArray: [StringsData] = []
-        
+        var stringsArray = [StringsData]()
+        var stringsDictArray = [StringsData]()
         xcstrings.strings.forEach { stringKey, strings in
             strings.localizations.forEach { language, localization in
-                // Check if this is a plural variation or simple string
-                if let variations = localization.variations,
-                   let pluralVariations = variations.plural {
-                    // Handle plural - goes to stringsdict
-                    let pluralValues = pluralVariations.mapValues { $0.stringUnit.value }
-                    if let index = stringsDictArray.firstIndex(where: { $0.language == language }) {
-                        stringsDictArray[index].values[stringKey] = .plural(pluralValues)
-                    } else {
-                        stringsDictArray.append(StringsData(
-                            tableName: "Localizable",
-                            language: language,
-                            values: [stringKey: .plural(pluralValues)]
-                        ))
-                    }
-                } else if let stringUnit = localization.stringUnit {
-                    // Handle simple string - goes to strings
+                switch localization {
+                case let .stringUnit(stringUnit):
                     if let index = stringsArray.firstIndex(where: { $0.language == language }) {
-                        stringsArray[index].values[stringKey] = .simple(stringUnit.value)
+                        stringsArray[index].items.append(.init(key: stringKey, value: .singular(stringUnit.value)))
                     } else {
                         stringsArray.append(StringsData(
                             tableName: "Localizable",
                             language: language,
-                            values: [stringKey: .simple(stringUnit.value)]
+                            items: [.init(key: stringKey, value: .singular(stringUnit.value))]
+                        ))
+                    }
+                case let .variations(variations):
+                    let plurals: [StringsData.Item.Value.Plural] = variations.plural
+                        .compactMap {
+                            guard let rule = StringsData.Item.Value.Plural.Rule(rawValue: $0.key) else { return nil }
+                            return StringsData.Item.Value.Plural(rule: rule, value: $0.value.stringUnit.value)
+                        }
+                        .sorted { $0.rule.rawValue < $1.rule.rawValue }
+                    if let index = stringsDictArray.firstIndex(where: { $0.language == language }) {
+                        stringsDictArray[index].items.append(.init(key: stringKey, value: .plural(plurals)))
+                    } else {
+                        stringsDictArray.append(StringsData(
+                            tableName: "Localizable",
+                            language: language,
+                            items: [.init(key: stringKey, value: .plural(plurals))]
                         ))
                     }
                 }
             }
         }
-        
         return (stringsArray, stringsDictArray)
     }
 
@@ -94,11 +94,11 @@ public struct XMReverter {
             let outputFileURL = outputFolderURL
                 .appending(path: stringsData.tableName)
                 .appendingPathExtension("strings")
-            let data = stringsData.values
+            let data = stringsData.items
                 .sorted(by: { $0.key < $1.key })
-                .compactMap { key, value -> String? in
-                    guard case .simple(let stringValue) = value else { return nil }
-                    return "\(key.debugDescription) = \(stringValue.debugDescription);"
+                .compactMap { item -> String? in
+                    guard case let .singular(stringValue) = item.value else { return nil }
+                    return "\(item.key.debugDescription) = \(stringValue.debugDescription);"
                 }
                 .joined(separator: "\n")
                 .data(using: .utf8)!
@@ -118,35 +118,25 @@ public struct XMReverter {
             let outputFileURL = outputFolderURL
                 .appending(path: stringsData.tableName)
                 .appendingPathExtension("stringsdict")
-            
-            // Build the plist dictionary
-            var plistDict: [String: [String: Any]] = [:]
-            
-            for (key, value) in stringsData.values.sorted(by: { $0.key < $1.key }) {
-                guard case .plural(let pluralRules) = value else { continue }
-                
-                // Create the variable name (use "format" as default)
-                let variableName = "format"
-                
-                // Build the variable dictionary
-                var variableDict: [String: Any] = [
-                    "NSStringFormatSpecTypeKey": "NSStringPluralRuleType",
-                    "NSStringFormatValueTypeKey": "li"
-                ]
-
-                // Add plural rules
-                for (pluralKey, pluralValue) in pluralRules {
-                    variableDict[pluralKey] = pluralValue
+            let plistDict = stringsData.items
+                .sorted(by: { $0.key < $1.key })
+                .compactMap { item -> (key: String, dict: [String: String])? in
+                    guard case let .plural(plurals) = item.value else { return nil }
+                    var dict: [String: String] = [
+                        "NSStringFormatSpecTypeKey": "NSStringPluralRuleType",
+                        "NSStringFormatValueTypeKey": "li",
+                    ]
+                    plurals.forEach { plural in
+                        dict[plural.rule.rawValue] = plural.value
+                    }
+                    return (item.key, dict)
                 }
-                
-                // Build the top-level dictionary for this key
-                plistDict[key] = [
-                    "NSStringLocalizedFormatKey": "%#@\(variableName)@",
-                    variableName: variableDict
-                ]
-            }
-            
-            // Convert to XML plist
+                .reduce(into: [String: [String: Any]]()) { partialResult, element in
+                    partialResult[element.key] = [
+                        "NSStringLocalizedFormatKey": "%#@format@",
+                        "format": element.dict
+                    ]
+                }
             let data = try PropertyListSerialization.data(
                 fromPropertyList: plistDict,
                 format: .xml,
@@ -155,7 +145,7 @@ public struct XMReverter {
             try writeData(data, outputFileURL)
             standardOutput("Succeeded to export stringsdict file.")
         } catch {
-            throw XMError.failedToExportStringsFile
+            throw XMError.failedToExportStringsDictFile
         }
     }
 }
