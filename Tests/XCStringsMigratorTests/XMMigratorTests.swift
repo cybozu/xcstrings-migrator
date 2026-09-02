@@ -242,7 +242,7 @@ struct XMMigratorTests {
         }
         var writeDataCount = Int.zero
         sut.writeData = { _, url in
-            #expect(url.path() == "output/Localizable.xcstrings")
+            #expect(url.relativePath == "output/Localizable.xcstrings")
             writeDataCount += 1
         }
         let input = XCStrings(
@@ -293,7 +293,7 @@ struct XMMigratorTests {
         }
         var writeDataCount = Int.zero
         sut.writeData = { _, url in
-            #expect(url.path() == "output/Localizable.xcstrings")
+            #expect(url.relativePath == "output/Localizable.xcstrings")
             writeDataCount += 1
         }
         let input = XCStrings(
