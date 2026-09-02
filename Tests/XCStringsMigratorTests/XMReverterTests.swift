@@ -173,7 +173,7 @@ struct XMReverterTests {
         }
         var writeDataCount = Int.zero
         sut.writeData = { _, url in
-            #expect(url.path() == "output/test.lproj/Localizable.strings")
+            #expect(url.relativePath == "output/test.lproj/Localizable.strings")
             writeDataCount += 1
         }
         let input = StringsData(
@@ -217,7 +217,7 @@ struct XMReverterTests {
         }
         var writeDataCount = Int.zero
         sut.writeData = { text, url in
-            #expect(url.path() == "output/test.lproj/Localizable.stringsdict")
+            #expect(url.relativePath == "output/test.lproj/Localizable.stringsdict")
             writeDataCount += 1
         }
         let input = StringsData(
